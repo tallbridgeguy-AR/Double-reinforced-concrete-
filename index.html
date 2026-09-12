@@ -7,14 +7,10 @@
     <style>
         :root {
             --primary: #2563eb;
-            --primary-hover: #1d4ed8;
             --bg: #f8fafc;
             --card-bg: #ffffff;
             --text: #1e293b;
             --border: #e2e8f0;
-            --accent-steel: #ef4444;
-            --accent-comp-steel: #3b82f6;
-            --accent-concrete: #cbd5e1;
         }
 
         body {
@@ -205,9 +201,7 @@
         <div class="card">
             <h2>Dynamic Cross-Section Diagram</h2>
             <div class="diagram-container">
-                <svg id="beam-diagram" width="340" height="420" viewBox="0 0 340 420">
-                    <!-- Dynamic rendering via JavaScript -->
-                </svg>
+                <svg id="beam-diagram" width="340" height="420" viewBox="0 0 340 420"></svg>
             </div>
         </div>
 
@@ -254,7 +248,6 @@
 
 <script>
     function calculate() {
-        // Read inputs
         const b = parseFloat(document.getElementById('b').value) || 0;
         const d = parseFloat(document.getElementById('d').value) || 0;
         const d_prime = parseFloat(document.getElementById('d_prime').value) || 0;
@@ -266,7 +259,6 @@
         const Es = 29000000;
         const ey = fy / Es;
 
-        // Calculate Beta 1
         let beta1 = 0.85;
         if (fc > 4000 && fc < 8000) {
             beta1 = 0.85 - (0.05 * (fc - 4000) / 1000);
@@ -274,7 +266,6 @@
             beta1 = 0.65;
         }
 
-        // Quadratic formula parameters
         const A = 0.85 * fc * beta1 * b;
         const B = As_prime * (0.003 * Es - 0.85 * fc) - (As * fy);
         const C = -As_prime * 0.003 * Es * d_prime;
@@ -303,7 +294,6 @@
 
         const phi_Mn_kip_ft = phi * Mn_kip_ft;
 
-        // Display results
         document.getElementById('res-c').innerText = c.toFixed(2) + ' in';
         document.getElementById('res-a').innerText = a.toFixed(2) + ' in';
         document.getElementById('res-et').innerText = e_t.toFixed(5);
@@ -320,22 +310,20 @@
         document.getElementById('res-mn').innerText = Mn_kip_ft.toFixed(2) + ' kip-ft';
         document.getElementById('res-phi-mn').innerText = phi_Mn_kip_ft.toFixed(2) + ' kip-ft';
 
-        // Draw Diagram
         drawDiagram(b, d, d_prime, c, a);
     }
 
     function drawDiagram(b, d, d_prime, c, a) {
         const svg = document.getElementById('beam-diagram');
         
-        // Scale settings
-        const totalHeight = d + 3.0; // Estimate total beam height
-        const scaleY = 320 / totalHeight;
-        const scaleX = 180 / b;
+        const totalHeight = d + 3.0;
+        const scaleY = 300 / totalHeight;
+        const scaleX = 160 / b;
 
         const beamW = b * scaleX;
         const beamH = totalHeight * scaleY;
-        const startX = 80;
-        const startY = 30;
+        const startX = 90;
+        const startY = 40;
 
         const pos_d_prime = startY + (d_prime * scaleY);
         const pos_d = startY + (d * scaleY);
@@ -351,298 +339,30 @@
             
             <!-- Neutral Axis Line -->
             <line x1="${startX - 20}" y1="${pos_c}" x2="${startX + beamW + 20}" y2="${pos_c}" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4"/>
-            <text x="${startX + beamW + 25}" y="${pos_c + 4}" font-size="11" fill="#ef4444" font-weight="bold">N.A. (cHere is the complete, single-file code for a functional **Web Architecture Blueprint Generator**. It includes input fields to configure your project and dynamically renders a visual component diagram using SVG.
+            <text x="${startX + beamW + 25}" y="${pos_c + 4}" font-size="11" fill="#ef4444" font-weight="bold">N.A. (c)</text>
 
-Save the code below as an `index.html` file and open it directly in any web browser.
+            <!-- Compression Steel Bars -->
+            <circle cx="${startX + beamW * 0.25}" cy="${pos_d_prime}" r="6" fill="#2563eb" />
+            <circle cx="${startX + beamW * 0.75}" cy="${pos_d_prime}" r="6" fill="#2563eb" />
 
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Architecture Blueprint Generator</title>
-  <style>
-    :root {
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --accent: #38bdf8;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
-      --border: #334155;
-    }
+            <!-- Tension Steel Bars -->
+            <circle cx="${startX + beamW * 0.2}" cy="${pos_d}" r="7" fill="#dc2626" />
+            <circle cx="${startX + beamW * 0.4}" cy="${pos_d}" r="7" fill="#dc2626" />
+            <circle cx="${startX + beamW * 0.6}" cy="${pos_d}" r="7" fill="#dc2626" />
+            <circle cx="${startX + beamW * 0.8}" cy="${pos_d}" r="7" fill="#dc2626" />
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, sans-serif;
-    }
+            <!-- Dimension Annotations -->
+            <line x1="${startX - 15}" y1="${startY}" x2="${startX - 15}" y2="${pos_d_prime}" stroke="#64748b" stroke-width="1"/>
+            <text x="${startX - 20}" y="${(startY + pos_d_prime)/2}" font-size="10" fill="#64748b" text-anchor="end">d'</text>
 
-    body {
-      background-color: var(--bg);
-      color: var(--text);
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      padding: 2rem;
-    }
-
-    header {
-      margin-bottom: 2rem;
-    }
-
-    h1 {
-      font-size: 1.8rem;
-      color: var(--accent);
-      margin-bottom: 0.5rem;
-    }
-
-    p {
-      color: var(--text-muted);
-    }
-
-    .container {
-      display: grid;
-      grid-template-columns: 320px 1fr;
-      gap: 2rem;
-      flex-grow: 1;
-    }
-
-    /* Form Styles */
-    .form-panel {
-      background: var(--card-bg);
-      padding: 1.5rem;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      gap: 1.25rem;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    label {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--text-muted);
-    }
-
-    input, select {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 0.6rem 0.8rem;
-      border-radius: 6px;
-      font-size: 0.9rem;
-      outline: none;
-    }
-
-    input:focus, select:focus {
-      border-color: var(--accent);
-    }
-
-    .checkbox-group {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-top: 0.25rem;
-    }
-
-    .checkbox-group input {
-      cursor: pointer;
-    }
-
-    /* Diagram Styles */
-    .diagram-panel {
-      background: var(--card-bg);
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      padding: 1.5rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-
-    .diagram-panel h2 {
-      position: absolute;
-      top: 1.5rem;
-      left: 1.5rem;
-      font-size: 1rem;
-      color: var(--text-muted);
-    }
-
-    svg {
-      width: 100%;
-      height: 100%;
-      min-height: 400px;
-    }
-
-    .node {
-      fill: #0f172a;
-      stroke: var(--accent);
-      stroke-width: 2;
-      rx: 6;
-    }
-
-    .node-title {
-      fill: var(--accent);
-      font-weight: bold;
-      font-size: 14px;
-      text-anchor: middle;
-    }
-
-    .node-sub {
-      fill: var(--text-muted);
-      font-size: 12px;
-      text-anchor: middle;
-    }
-
-    .connection {
-      stroke: var(--border);
-      stroke-width: 2;
-      stroke-dasharray: 4;
-      animation: dash 20s linear infinite;
-    }
-
-    @keyframes dash {
-      to {
-        stroke-dashoffset: -100;
-      }
-    }
-  </style>
-</head>
-<body>
-
-  <header>
-    <h1>Web Architecture Blueprint Generator</h1>
-    <p>Adjust inputs on the left to dynamically render your system architecture component diagram.</p>
-  </header>
-
-  <div class="container">
-    <!-- Controls Panel -->
-    <form class="form-panel" id="archForm">
-      <div class="form-group">
-        <label for="appName">Application Name</label>
-        <input type="text" id="appName" value="My Web App">
-      </div>
-
-      <div class="form-group">
-        <label for="frontendTech">Frontend Framework</label>
-        <select id="frontendTech">
-          <option value="React.js">React.js</option>
-          <option value="Vue.js">Vue.js</option>
-          <option value="Next.js">Next.js</option>
-          <option value="Vanilla JS">Vanilla JS</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label for="backendTech">Backend API</label>
-        <select id="backendTech">
-          <option value="Node.js / Express">Node.js / Express</option>
-          <option value="Python / FastAPI">Python / FastAPI</option>
-          <option value="Go / Gin">Go / Gin</option>
-          <option value="Java / Spring">Java / Spring</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label for="dbTech">Database Engine</label>
-        <select id="dbTech">
-          <option value="PostgreSQL">PostgreSQL (Relational)</option>
-          <option value="MongoDB">MongoDB (Document)</option>
-          <option value="MySQL">MySQL (Relational)</option>
-        </select>
-      </div>
-
-      <div class="checkbox-group">
-        <input type="checkbox" id="hasCache" checked>
-        <label for="hasCache">Include Redis Cache Layer</label>
-      </div>
-    </form>
-
-    <!-- Visual Diagram Area -->
-    <div class="diagram-panel">
-      <h2 id="diagramTitle">System Architecture</h2>
-      <svg id="diagram" viewBox="0 0 800 400">
-        <!-- SVG content rendered via JS -->
-      </svg>
-    </div>
-  </div>
-
-  <script>
-    const form = document.getElementById('archForm');
-    const svg = document.getElementById('diagram');
-
-    function drawDiagram() {
-      const appName = document.getElementById('appName').value || 'System';
-      const frontend = document.getElementById('frontendTech').value;
-      const backend = document.getElementById('backendTech').value;
-      const db = document.getElementById('dbTech').value;
-      const hasCache = document.getElementById('hasCache').checked;
-
-      document.getElementById('diagramTitle').innerText = `${appName} - Architecture Visualizer`;
-
-      // Define Node Positions (x, y)
-      const client = { x: 100, y: 200, label: "Client Layer", sub: frontend };
-      const api = { x: 380, y: 200, label: "API Gateway / Server", sub: backend };
-      const database = { x: 660, y: 130, label: "Database", sub: db };
-      const cache = { x: 660, y: 270, label: "Cache Layer", sub: "Redis" };
-
-      let connectionsHTML = `
-        <!-- Client -> API -->
-        <line x1="${client.x + 60}" y1="${client.y}" x2="${api.x - 60}" y2="${api.y}" class="connection" />
-        <!-- API -> DB -->
-        <line x1="${api.x + 60}" y1="${api.y}" x2="${database.x - 60}" y2="${database.y}" class="connection" />
-      `;
-
-      if (hasCache) {
-        connectionsHTML += `
-          <!-- API -> Cache -->
-          <line x1="${api.x + 60}" y1="${api.y}" x2="${cache.x - 60}" y2="${cache.y}" class="connection" />
+            <line x1="${startX - 40}" y1="${startY}" x2="${startX - 40}" y2="${pos_d}" stroke="#64748b" stroke-width="1"/>
+            <text x="${startX - 45}" y="${(startY + pos_d)/2}" font-size="10" fill="#64748b" text-anchor="end">d</text>
         `;
-      }
-
-      function renderNode(node) {
-        return `
-          <g transform="translate(${node.x}, ${node.y})">
-            <rect class="node" x="-70" y="-35" width="140" height="70"></rect>
-            <text class="node-title" y="-5">${node.label}</text>
-            <text class="node-sub" y="15">${node.sub}</text>
-          </g>
-        `;
-      }
-
-      svg.innerHTML = `
-        <defs>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-            <feMerge>
-              <feMergeNode in="coloredBlur"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-        </defs>
-        ${connectionsHTML}
-        ${renderNode(client)}
-        ${renderNode(api)}
-        ${renderNode(database)}
-        ${hasCache ? renderNode(cache) : ''}
-      `;
     }
 
-    // Attach real-time listeners
-    form.addEventListener('input', drawDiagram);
+    // Run initial calculation when page loads
+    window.onload = calculate;
+</script>
 
-    // Initial render
-    drawDiagram();
-  </script>
 </body>
 </html>
