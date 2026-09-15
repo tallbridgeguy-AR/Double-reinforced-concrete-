@@ -3,15 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doubly Reinforced Concrete Beam Calculator</title>
-
+    <title>Doubly Reinforced Concrete Beam Calculator (ACI 318-19)</title>
     <style>
         :root {
             --primary: #2563eb;
+            --primary-hover: #1d4ed8;
             --bg: #f8fafc;
             --card-bg: #ffffff;
             --text: #1e293b;
             --border: #e2e8f0;
+            --success: #166534;
+            --success-bg: #dcfce7;
+            --error: #991b1b;
+            --error-bg: #fee2e2;
+            --warning: #92400e;
+            --warning-bg: #fffbeb;
         }
 
         * {
@@ -19,12 +25,12 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
-                Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg);
             color: var(--text);
             margin: 0;
             padding: 20px;
+            line-height: 1.5;
         }
 
         .container {
@@ -34,25 +40,29 @@
 
         header {
             margin-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 16px;
         }
 
         header h1 {
             margin: 0 0 8px 0;
             font-size: 1.8rem;
+            color: #0f172a;
         }
 
         header p {
             margin: 0;
             color: #64748b;
+            font-size: 0.95rem;
         }
 
         .grid {
             display: grid;
-            grid-template-columns: 320px 1fr 340px;
-            gap: 20px;
+            grid-template-columns: 340px 1fr;
+            gap: 24px;
         }
 
-        @media (max-width: 1024px) {
+        @media (max-width: 900px) {
             .grid {
                 grid-template-columns: 1fr;
             }
@@ -64,6 +74,7 @@
             border-radius: 8px;
             padding: 20px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            margin-bottom: 24px;
         }
 
         .card h2 {
@@ -72,53 +83,60 @@
             margin-bottom: 16px;
             border-bottom: 2px solid var(--border);
             padding-bottom: 8px;
+            color: #334155;
         }
 
         .form-group {
-            margin-bottom: 12px;
+            margin-bottom: 14px;
         }
 
         .form-group label {
             display: block;
             font-size: 0.85rem;
             font-weight: 600;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            color: #475569;
         }
 
         .form-group input {
             width: 100%;
-            padding: 8px 10px;
+            padding: 8px 12px;
             border: 1px solid var(--border);
             border-radius: 6px;
             font-size: 0.95rem;
+            color: var(--text);
+            background-color: #fff;
         }
 
         .form-group input:focus {
             outline: none;
             border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
 
-        .diagram-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: #ffffff;
-            border-radius: 6px;
-            padding: 10px;
-            overflow: hidden;
+        .results-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
         }
 
-        svg {
-            max-width: 100%;
-            height: auto;
+        @media (max-width: 640px) {
+            .results-layout {
+                grid-template-columns: 1fr;
+            }
         }
 
         .result-item {
             display: flex;
             justify-content: space-between;
-            gap: 10px;
-            margin-bottom: 10px;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px dashed var(--border);
             font-size: 0.95rem;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
         }
 
         .result-item .label {
@@ -127,265 +145,201 @@
 
         .result-item .value {
             font-weight: 600;
-            text-align: right;
+            color: #0f172a;
         }
 
         .highlight-box {
             background-color: #eff6ff;
             border-left: 4px solid var(--primary);
-            padding: 12px;
-            margin-top: 16px;
+            padding: 16px;
             border-radius: 4px;
+            margin-bottom: 20px;
         }
 
         .highlight-box .title {
             font-size: 0.85rem;
             color: #1e40af;
             font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .highlight-box .main-value {
-            font-size: 1.5rem;
-            font-weight: bold;
+            font-size: 2rem;
+            font-weight: 800;
             color: #1e3a8a;
             margin-top: 4px;
         }
 
         .status-badge {
             display: inline-block;
-            padding: 2px 8px;
+            padding: 4px 10px;
             border-radius: 12px;
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             font-weight: 600;
+            text-align: center;
         }
 
-        .status-badge.yes {
-            background: #dcfce7;
-            color: #166534;
+        .status-badge.success {
+            background: var(--success-bg);
+            color: var(--success);
         }
 
-        .status-badge.no {
-            background: #fee2e2;
-            color: #991b1b;
+        .status-badge.error {
+            background: var(--error-bg);
+            color: var(--error);
         }
 
         .status-badge.warning {
-            background: #fef3c7;
-            color: #92400e;
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        .diagram-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 16px;
+        }
+
+        svg {
+            max-width: 100%;
+            height: auto;
         }
 
         .notice {
-            margin-top: 16px;
-            padding: 10px;
-            border-radius: 5px;
+            padding: 12px;
+            border-radius: 6px;
             font-size: 0.8rem;
             line-height: 1.4;
-            color: #92400e;
-            background: #fffbeb;
+            color: var(--warning);
+            background: var(--warning-bg);
             border: 1px solid #fde68a;
+            margin-top: 20px;
         }
     </style>
 </head>
-
 <body>
     <div class="container">
-
         <header>
             <h1>Doubly Reinforced Beam Capacity Calculator</h1>
-            <p>
-                Preliminary ACI-style flexural capacity analysis for a
-                rectangular doubly reinforced concrete beam
-            </p>
+            <p>ACI 318-19 Standard Flexural Strain Equilibrium Analysis &bull; English Units</p>
         </header>
 
         <div class="grid">
-
             <!-- Input Panel -->
             <div class="card">
                 <h2>Section Inputs</h2>
-
                 <div class="form-group">
-                    <label for="b">Beam Width, b [in]</label>
-                    <input
-                        type="number"
-                        id="b"
-                        value="12"
-                        min="0.01"
-                        step="0.5"
-                        oninput="calculate()"
-                    >
+                    <label for="b">Beam Width, b (in)</label>
+                    <input type="number" id="b" value="14" min="1" step="0.5" oninput="calculate()">
                 </div>
-
                 <div class="form-group">
-                    <label for="d">Tension Steel Depth, d [in]</label>
-                    <input
-                        type="number"
-                        id="d"
-                        value="21.5"
-                        min="0.01"
-                        step="0.5"
-                        oninput="calculate()"
-                    >
+                    <label for="h">Total Depth, h (in)</label>
+                    <input type="number" id="h" value="24" min="1" step="0.5" oninput="calculate()">
                 </div>
-
                 <div class="form-group">
-                    <label for="d_prime">Compression Steel Depth, d' [in]</label>
-                    <input
-                        type="number"
-                        id="d_prime"
-                        value="2.5"
-                        min="0"
-                        step="0.25"
-                        oninput="calculate()"
-                    >
+                    <label for="d">Tension Steel Depth, d (in)</label>
+                    <input type="number" id="d" value="21.5" min="1" step="0.5" oninput="calculate()">
                 </div>
-
                 <div class="form-group">
-                    <label for="fc">Concrete Strength, f'c [psi]</label>
-                    <input
-                        type="number"
-                        id="fc"
-                        value="4000"
-                        min="1"
-                        step="500"
-                        oninput="calculate()"
-                    >
+                    <label for="d_prime">Compression Steel Depth, d' (in)</label>
+                    <input type="number" id="d_prime" value="2.5" min="0" step="0.25" oninput="calculate()">
                 </div>
-
                 <div class="form-group">
-                    <label for="fy">Steel Yield Strength, fy [psi]</label>
-                    <input
-                        type="number"
-                        id="fy"
-                        value="60000"
-                        min="1"
-                        step="5000"
-                        oninput="calculate()"
-                    >
+                    <label for="fc">Concrete Strength, f'c (psi)</label>
+                    <input type="number" id="fc" value="4000" min="1000" step="500" oninput="calculate()">
                 </div>
-
                 <div class="form-group">
-                    <label for="As">Tension Steel Area, As [in²]</label>
-                    <input
-                        type="number"
-                        id="As"
-                        value="5.08"
-                        min="0.001"
-                        step="0.01"
-                        oninput="calculate()"
-                    >
+                    <label for="fy">Steel Yield Strength, fy (psi)</label>
+                    <input type="number" id="fy" value="60000" min="10000" step="5000" oninput="calculate()">
                 </div>
-
                 <div class="form-group">
-                    <label for="As_prime">Compression Steel Area, A's [in²]</label>
-                    <input
-                        type="number"
-                        id="As_prime"
-                        value="1.57"
-                        min="0"
-                        step="0.01"
-                        oninput="calculate()"
-                    >
+                    <label for="As">Tension Steel Area, As (in²)</label>
+                    <input type="number" id="As" value="6.70" min="0.01" step="0.01" oninput="calculate()">
                 </div>
-
+                <div class="form-group">
+                    <label for="As_prime">Compression Steel Area, A's (in²)</label>
+                    <input type="number" id="As_prime" value="1.27" min="0" step="0.01" oninput="calculate()">
+                </div>
                 <div class="notice">
-                    This tool checks flexural section capacity only. It does
-                    not check shear, development length, detailing, deflection,
-                    crack control, minimum reinforcement, or load combinations.
+                    This tool solves for strict force equilibrium: C_c + C_s = T. It accounts for displaced concrete area by subtracting 0.85f'c from the compression steel stress.
                 </div>
             </div>
 
-            <!-- Diagram Panel -->
-            <div class="card">
-                <h2>Cross-Section Diagram</h2>
-
-                <div class="diagram-container">
-                    <svg
-                        id="beam-diagram"
-                        width="340"
-                        height="420"
-                        viewBox="0 0 340 420"
-                        aria-label="Beam cross-section diagram"
-                    ></svg>
-                </div>
-            </div>
-
-            <!-- Output Panel -->
-            <div class="card">
-                <h2>Analysis Results</h2>
-
-                <div class="result-item">
-                    <span class="label">β₁:</span>
-                    <span class="value" id="res-beta1">--</span>
-                </div>
-
-                <div class="result-item">
-                    <span class="label">Neutral Axis, c:</span>
-                    <span class="value" id="res-c">--</span>
-                </div>
-
-                <div class="result-item">
-                    <span class="label">Stress Block Depth, a:</span>
-                    <span class="value" id="res-a">--</span>
-                </div>
-
-                <div class="result-item">
-                    <span class="label">Tension Strain, εt:</span>
-                    <span class="value" id="res-et">--</span>
-                </div>
-
-                <div class="result-item">
-                    <span class="label">Compression Strain, ε's:</span>
-                    <span class="value" id="res-es-prime">--</span>
-                </div>
-
-                <div class="result-item">
-                    <span class="label">Tension Steel Stress:</span>
-                    <span class="value" id="res-fs">--</span>
-                </div>
-
-                <div class="result-item">
-                    <span class="label">Compression Steel Stress:</span>
-                    <span class="value" id="res-fs-prime">--</span>
-                </div>
-
-                <div class="result-item">
-                    <span class="label">Comp. Steel Yielded:</span>
-                    <span id="res-yielded">--</span>
-                </div>
-
-                <div class="result-item">
-                    <span class="label">Tension-Controlled:</span>
-                    <span id="res-tension-controlled">--</span>
-                </div>
-
-                <div class="result-item">
-                    <span class="label">ϕ Factor:</span>
-                    <span class="value" id="res-phi">--</span>
-                </div>
-
+            <!-- Output / Diagrams Panel -->
+            <div>
                 <div class="highlight-box">
-                    <div class="title">Nominal Capacity, Mn</div>
-                    <div class="main-value" id="res-mn">--</div>
+                    <div class="title">Design Flexural Capacity (&phi;Mn)</div>
+                    <div class="main-value" id="phiMn_display">0.00 kip-ft</div>
                 </div>
 
-                <div
-                    class="highlight-box"
-                    style="background-color: #f0fdf4; border-color: #22c55e;"
-                >
-                    <div
-                        class="title"
-                        style="color: #15803d;"
-                    >
-                        Design Capacity, ϕMn
+                <div class="results-layout">
+                    <div class="card">
+                        <h2>Equilibrium Results</h2>
+                        <div class="result-item">
+                            <span class="label">Neutral Axis Depth (c)</span>
+                            <span class="value" id="c_val">0.00 in</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="label">Stress Block Depth (a)</span>
+                            <span class="value" id="a_val">0.00 in</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="label">Beta 1 (&beta;₁)</span>
+                            <span class="value" id="beta1_val">0.00</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="label">Concrete Block Force (Cc)</span>
+                            <span class="value" id="Cc_val">0.0 kips</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="label">Comp. Steel Force (Cs)</span>
+                            <span class="value" id="Cs_val">0.0 kips</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="label">Tension Steel Force (T)</span>
+                            <span class="value" id="T_val">0.0 kips</span>
+                        </div>
                     </div>
 
-                    <div
-                        class="main-value"
-                        id="res-phi-mn"
-                        style="color: #166534;"
-                    >
-                        --
+                    <div class="card">
+                        <h2>Ductility & Safety Checks</h2>
+                        <div class="result-item">
+                            <span class="label">Tension Strain (&epsilon;_t)</span>
+                            <span class="value" id="et_val">0.0000</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="label">Comp. Steel Strain (&epsilon;'s)</span>
+                            <span class="value" id="ep_val">0.0000</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="label">Comp. Steel Status</span>
+                            <span class="value" id="steel_status">-</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="label">Strength Reduction (&phi;)</span>
+                            <span class="value" id="phi_val">0.00</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="label">Section Classification</span>
+                            <span class="value" id="class_val">-</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="label">Nominal Capacity (Mn)</span>
+                            <span class="value" id="Mn_val">0.00 k-ft</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Cross Section & Engineering Stress/Strain Diagrams</h2>
+                    <div class="diagram-container">
+                        <div id="diagram_svg"></div>
                     </div>
                 </div>
             </div>
@@ -393,616 +347,214 @@
     </div>
 
     <script>
-        /*
-         * Preliminary rectangular doubly reinforced beam flexural analysis.
-         *
-         * Units:
-         *   Length: inches
-         *   Stress: psi
-         *   Area: square inches
-         *   Moment internally: lb-in
-         *   Displayed moment: kip-ft
-         */
-
-        function clamp(value, minimum, maximum) {
-            return Math.max(minimum, Math.min(maximum, value));
-        }
-
-        function steelStress(strain, fy, Es) {
-            // Elastic-perfectly-plastic steel model
-            return clamp(strain * Es, -fy, fy);
-        }
-
-        function getInputs() {
-            return {
-                b: parseFloat(document.getElementById("b").value),
-                d: parseFloat(document.getElementById("d").value),
-                dPrime: parseFloat(
-                    document.getElementById("d_prime").value
-                ),
-                fc: parseFloat(document.getElementById("fc").value),
-                fy: parseFloat(document.getElementById("fy").value),
-                As: parseFloat(document.getElementById("As").value),
-                AsPrime: parseFloat(
-                    document.getElementById("As_prime").value
-                )
-            };
-        }
-
-        function validateInputs(values) {
-            const {
-                b,
-                d,
-                dPrime,
-                fc,
-                fy,
-                As,
-                AsPrime
-            } = values;
-
-            const allFinite = [
-                b,
-                d,
-                dPrime,
-                fc,
-                fy,
-                As,
-                AsPrime
-            ].every(Number.isFinite);
-
-            if (!allFinite) {
-                return "All inputs must contain valid numbers.";
-            }
-
-            if (b <= 0) {
-                return "Beam width b must be greater than zero.";
-            }
-
-            if (d <= 0) {
-                return "Effective depth d must be greater than zero.";
-            }
-
-            if (dPrime < 0) {
-                return "Compression-steel depth d' cannot be negative.";
-            }
-
-            if (dPrime >= d) {
-                return "Compression-steel depth d' must be less than d.";
-            }
-
-            if (fc <= 0 || fy <= 0) {
-                return "Concrete and steel strengths must be greater than zero.";
-            }
-
-            if (As <= 0) {
-                return "Tension reinforcement area As must be greater than zero.";
-            }
-
-            if (AsPrime < 0) {
-                return "Compression reinforcement area A's cannot be negative.";
-            }
-
-            return null;
-        }
-
-        function getBeta1(fc) {
-            /*
-             * ACI-style beta1 relationship:
-             *   β1 = 0.85 for fc' <= 4000 psi
-             *   decreases by 0.05 per 1000 psi above 4000 psi
-             *   minimum β1 = 0.65
-             */
-            return Math.max(
-                0.65,
-                0.85 - 0.05 * Math.max(0, (fc - 4000) / 1000)
-            );
-        }
-
-        function forceEquilibrium(c, values, beta1, Es) {
-            const {
-                b,
-                d,
-                dPrime,
-                fc,
-                fy,
-                As,
-                AsPrime
-            } = values;
-
-            if (!Number.isFinite(c) || c <= 0) {
-                return NaN;
-            }
-
-            const epsilonCu = 0.003;
-            const a = beta1 * c;
-
-            const tensionStrain =
-                epsilonCu * (d - c) / c;
-
-            const compressionSteelStrain =
-                epsilonCu * (c - dPrime) / c;
-
-            const tensionSteelStress =
-                steelStress(tensionStrain, fy, Es);
-
-            const compressionSteelStress =
-                steelStress(compressionSteelStrain, fy, Es);
-
-            const concreteCompressionForce =
-                0.85 * fc * a * b;
-
-            /*
-             * Compression reinforcement contribution.
-             * The term 0.85fc accounts for the concrete displaced
-             * by the compression reinforcement.
-             */
-            const compressionSteelForce =
-                AsPrime *
-                (compressionSteelStress - 0.85 * fc);
-
-            const tensionSteelForce =
-                As * tensionSteelStress;
-
-            return (
-                concreteCompressionForce +
-                compressionSteelForce -
-                tensionSteelForce
-            );
-        }
-
-        function solveNeutralAxis(values, beta1, Es) {
-            const { d, dPrime } = values;
-
-            let lower = Math.max(dPrime + 1e-6, 1e-6);
-            let upper = Math.max(d * 2, lower + 1);
-
-            let fLower =
-                forceEquilibrium(lower, values, beta1, Es);
-
-            let fUpper =
-                forceEquilibrium(upper, values, beta1, Es);
-
-            /*
-             * Expand the upper boundary until the force-equilibrium
-             * function changes sign.
-             */
-            let attempts = 0;
-
-            while (
-                Number.isFinite(fLower) &&
-                Number.isFinite(fUpper) &&
-                fLower * fUpper > 0 &&
-                attempts < 60
-            ) {
-                upper *= 2;
-
-                fUpper =
-                    forceEquilibrium(upper, values, beta1, Es);
-
-                attempts++;
-            }
-
-            if (
-                !Number.isFinite(fLower) ||
-                !Number.isFinite(fUpper) ||
-                fLower * fUpper > 0
-            ) {
-                throw new Error(
-                    "Could not find a valid neutral-axis solution."
-                );
-            }
-
-            /*
-             * Bisection solution
-             */
-            for (let i = 0; i < 120; i++) {
-                const middle = (lower + upper) / 2;
-
-                const fMiddle =
-                    forceEquilibrium(middle, values, beta1, Es);
-
-                if (!Number.isFinite(fMiddle)) {
-                    throw new Error(
-                        "Invalid force-equilibrium calculation."
-                    );
-                }
-
-                if (Math.abs(fMiddle) < 0.001) {
-                    return middle;
-                }
-
-                if (fLower * fMiddle <= 0) {
-                    upper = middle;
-                    fUpper = fMiddle;
-                } else {
-                    lower = middle;
-                    fLower = fMiddle;
-                }
-            }
-
-            return (lower + upper) / 2;
-        }
-
-        function setError(message) {
-            const outputIds = [
-                "res-beta1",
-                "res-c",
-                "res-a",
-                "res-et",
-                "res-es-prime",
-                "res-fs",
-                "res-fs-prime",
-                "res-phi",
-                "res-mn",
-                "res-phi-mn"
-            ];
-
-            outputIds.forEach(function(id) {
-                document.getElementById(id).innerText = "--";
-            });
-
-            document.getElementById("res-yielded").innerHTML =
-                '<span class="status-badge no">ERROR</span>';
-
-            document.getElementById(
-                "res-tension-controlled"
-            ).innerHTML =
-                '<span class="status-badge no">ERROR</span>';
-
-            console.error(message);
-        }
-
-        function setStatus(elementId, status, text) {
-            const element = document.getElementById(elementId);
-
-            element.innerHTML =
-                `<span class="status-badge ${status}">${text}</span>`;
-        }
-
         function calculate() {
-            const values = getInputs();
-            const inputError = validateInputs(values);
+            // Read Inputs
+            const b = parseFloat(document.getElementById('b').value);
+            const h = parseFloat(document.getElementById('h').value);
+            const d = parseFloat(document.getElementById('d').value);
+            const d_prime = parseFloat(document.getElementById('d_prime').value);
+            const fc = parseFloat(document.getElementById('fc').value);
+            const fy = parseFloat(document.getElementById('fy').value);
+            const As = parseFloat(document.getElementById('As').value);
+            const As_prime = parseFloat(document.getElementById('As_prime').value);
 
-            if (inputError) {
-                setError(inputError);
+            if (isNaN(b) || isNaN(h) || isNaN(d) || isNaN(d_prime) || isNaN(fc) || isNaN(fy) || isNaN(As)) {
                 return;
             }
 
-            const {
-                b,
-                d,
-                dPrime,
-                fc,
-                fy,
-                As,
-                AsPrime
-            } = values;
+            // ACI 318-19 Beta 1 calculation
+            let beta1 = 0.85;
+            if (fc > 4000) {
+                beta1 = 0.85 - (0.05 * (fc - 4000)) / 1000;
+                if (beta1 < 0.65) beta1 = 0.65;
+            }
 
-            const Es = 29_000_000;
-            const epsilonCu = 0.003;
-            const epsilonY = fy / Es;
-            const beta1 = getBeta1(fc);
+            const Es = 29000000; // psi
+            const ecu = 0.003;
+            const ey = fy / Es;
 
-            let c;
+            // Solve for c iteratively using bisection method
+            let c_low = 0.001;
+            let c_high = h * 2;
+            let c = (c_low + c_high) / 2;
+            let error = 1.0;
+            let iterations = 0;
+            
+            let fs_prime = 0;
+            let Cc = 0;
+            let Cs = 0;
+            let T = 0;
+            let es = 0;
+            let eps = 0;
 
-            try {
-                c = solveNeutralAxis(values, beta1, Es);
-            } catch (error) {
-                setError(error.message);
-                return;
+            while (Math.abs(error) > 0.0001 && iterations < 500) {
+                c = (c_low + c_high) / 2;
+                
+                // Strain in tension steel
+                es = ecu * (d - c) / c;
+                let fs = Math.min(fy, Math.max(-fy, es * Es));
+
+                // Strain in compression steel
+                if (c > d_prime) {
+                    eps = ecu * (c - d_prime) / c;
+                } else {
+                    eps = -ecu * (d_prime - c) / c;
+                }
+                
+                // Account for displaced concrete area
+                fs_prime = Math.min(fy, Math.max(-fy, eps * Es));
+                
+                // Forces
+                Cc = 0.85 * fc * beta1 * c * b;
+                Cs = As_prime * (fs_prime - 0.85 * fc);
+                T = As * fs;
+
+                error = Cc + Cs - T;
+
+                if (error > 0) {
+                    // Compression too big -> decrease c
+                    c_high = c;
+                } else {
+                    // Tension too big -> increase c
+                    c_low = c;
+                }
+                iterations++;
             }
 
             const a = beta1 * c;
-
-            const tensionStrain =
-                epsilonCu * (d - c) / c;
-
-            const compressionSteelStrain =
-                epsilonCu * (c - dPrime) / c;
-
-            const tensionSteelStress =
-                steelStress(tensionStrain, fy, Es);
-
-            const compressionSteelStress =
-                steelStress(compressionSteelStrain, fy, Es);
-
-            const concreteCompressionForce =
-                0.85 * fc * a * b;
-
-            const compressionSteelForce =
-                AsPrime *
-                (compressionSteelStress - 0.85 * fc);
-
-            const tensionSteelForce =
-                As * tensionSteelStress;
-
-            /*
-             * Nominal moment about the tension-steel level.
-             */
-            const concreteMoment =
-                concreteCompressionForce * (d - a / 2);
-
-            const compressionSteelMoment =
-                compressionSteelForce * (d - dPrime);
-
-            const Mn_lb_in =
-                concreteMoment + compressionSteelMoment;
-
-            // 1 kip-ft = 12,000 lb-in
-            const Mn_kip_ft =
-                Mn_lb_in / 12000;
-
-            /*
-             * Strength-reduction factor based on tensile strain.
-             */
-            let phi;
-
-            if (tensionStrain <= epsilonY) {
-                phi = 0.65;
-            } else if (tensionStrain >= epsilonY + 0.003) {
+            
+            // Flexural Strength Reduction Factor phi (ACI 318-19 Section 21.2.2)
+            let phi = 0.65;
+            let classification = "Compression-Controlled";
+            let classBadge = "error";
+            
+            if (es >= 0.005) {
                 phi = 0.90;
-            } else {
-                phi =
-                    0.65 +
-                    (tensionStrain - epsilonY) *
-                    (0.25 / 0.003);
+                classification = "Tension-Controlled";
+                classBadge = "success";
+            } else if (es > ey) {
+                phi = 0.65 + (0.90 - 0.65) * (es - ey) / (0.005 - ey);
+                classification = "Transition Zone";
+                classBadge = "warning";
             }
 
-            const phiMn_kip_ft =
-                phi * Mn_kip_ft;
+            // Nominal Moment Capacity Mn
+            // Moment about tension steel center
+            const Mn = (Cc * (d - a / 2) + Cs * (d - d_prime)) / 12000; // kip-ft
+            const phiMn = phi * Mn;
 
-            const compressionSteelYielded =
-                Math.abs(compressionSteelStress) >= fy - 1;
+            // Update UI fields
+            document.getElementById('phiMn_display').innerText = phiMn.toFixed(2) + " kip-ft";
+            document.getElementById('c_val').innerText = c.toFixed(3) + " in";
+            document.getElementById('a_val').innerText = a.toFixed(3) + " in";
+            document.getElementById('beta1_val').innerText = beta1.toFixed(3);
+            document.getElementById('Cc_val').innerText = (Cc / 1000).toFixed(1) + " kips";
+            document.getElementById('Cs_val').innerText = (Cs / 1000).toFixed(1) + " kips";
+            document.getElementById('T_val').innerText = (T / 1000).toFixed(1) + " kips";
+            document.getElementById('et_val').innerText = es.toFixed(5);
+            document.getElementById('ep_val').innerText = eps.toFixed(5);
+            
+            const isYielded = Math.abs(fs_prime) >= fy;
+            document.getElementById('steel_status').innerHTML = `<span class="status-badge ${isYielded ? 'success' : 'warning'}">${isYielded ? 'Yielded' : 'Elastic'}</span>`;
+            document.getElementById('phi_val').innerText = phi.toFixed(3);
+            document.getElementById('class_val').innerHTML = `<span class="status-badge ${classBadge}">${classification}</span>`;
+            document.getElementById('Mn_val').innerText = Mn.toFixed(2) + " k-ft";
 
-            const tensionSteelYielded =
-                Math.abs(tensionSteelStress) >= fy - 1;
-
-            const tensionControlled =
-                tensionStrain >= epsilonY + 0.003;
-
-            const equilibriumError =
-                concreteCompressionForce +
-                compressionSteelForce -
-                tensionSteelForce;
-
-            /*
-             * Display results
-             */
-            document.getElementById("res-beta1").innerText =
-                beta1.toFixed(3);
-
-            document.getElementById("res-c").innerText =
-                `${c.toFixed(3)} in`;
-
-            document.getElementById("res-a").innerText =
-                `${a.toFixed(3)} in`;
-
-            document.getElementById("res-et").innerText =
-                tensionStrain.toFixed(5);
-
-            document.getElementById("res-es-prime").innerText =
-                compressionSteelStrain.toFixed(5);
-
-            document.getElementById("res-fs").innerText =
-                `${(tensionSteelStress / 1000).toFixed(2)} ksi`;
-
-            document.getElementById("res-fs-prime").innerText =
-                `${(compressionSteelStress / 1000).toFixed(2)} ksi`;
-
-            setStatus(
-                "res-yielded",
-                compressionSteelYielded ? "yes" : "no",
-                compressionSteelYielded ? "YES" : "NO"
-            );
-
-            setStatus(
-                "res-tension-controlled",
-                tensionControlled ? "yes" : "warning",
-                tensionControlled ? "YES" : "NO"
-            );
-
-            document.getElementById("res-phi").innerText =
-                phi.toFixed(3);
-
-            document.getElementById("res-mn").innerText =
-                `${Mn_kip_ft.toFixed(2)} kip-ft`;
-
-            document.getElementById("res-phi-mn").innerText =
-                `${phiMn_kip_ft.toFixed(2)} kip-ft`;
-
-            drawDiagram(b, d, dPrime, c, a);
-
-            /*
-             * Useful diagnostic information for checking the calculation.
-             */
-            console.log({
-                beta1: beta1,
-                neutralAxisDepth: c,
-                stressBlockDepth: a,
-                tensionStrain: tensionStrain,
-                compressionSteelStrain: compressionSteelStrain,
-                tensionSteelStress: tensionSteelStress,
-                compressionSteelStress: compressionSteelStress,
-                tensionSteelYielded: tensionSteelYielded,
-                compressionSteelYielded: compressionSteelYielded,
-                tensionControlled: tensionControlled,
-                equilibriumError: equilibriumError
-            });
+            // Render SVG Engineering Diagram
+            renderDiagram(b, h, d, d_prime, c, a, es, eps);
         }
 
-        function drawDiagram(b, d, dPrime, c, a) {
-            const svg = document.getElementById("beam-diagram");
+        function renderDiagram(b, h, d, d_prime, c, a, es, eps) {
+            const width = 650;
+            const height = 280;
+            
+            // Layout scale coordinates
+            const beamX = 20, beamY = 30, beamW = 110, beamH = 220;
+            const scaleY = beamH / h;
 
-            const totalHeight =
-                Math.max(d + 3, 12);
+            let html = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`;
+            
+            // --- CROSS SECTION ---
+            html += `<rect x="${beamX}" y="${beamY}" width="${beamW}" height="${beamH}" fill="#e2e8f0" stroke="#475569" stroke-width="2"/>`;
+            // Dimension Lines
+            html += `<text x="${beamX + beamW/2}" y="${beamY - 10}" text-anchor="middle" font-size="11" font-weight="bold">b = ${b}"</text>`;
+            html += `<line x1="${beamX - 10}" y1="${beamY}" x2="${beamX - 10}" y2="${beamY + beamH}" stroke="#64748b" stroke-width="1"/>`;
+            html += `<text x="${beamX - 15}" y="${beamY + beamH/2}" text-anchor="end" font-size="11" font-weight="bold">h = ${h}"</text>`;
 
-            const scaleY =
-                300 / totalHeight;
+            // Rebar circles
+            // Compression bars (top)
+            const csY = beamY + (d_prime * scaleY);
+            html += `<circle cx="${beamX + 30}" cy="${csY}" r="6" fill="#1e293b"/>`;
+            html += `<circle cx="${beamX + beamW - 30}" cy="${csY}" r="6" fill="#1e293b"/>`;
+            // Tension bars (bottom)
+            const tsY = beamY + (d * scaleY);
+            html += `<circle cx="${beamX + 25}" cy="${tsY}" r="8" fill="#1e293b"/>`;
+            html += `<circle cx="${beamX + beamW/2}" cy="${tsY}" r="8" fill="#1e293b"/>`;
+            html += `<circle cx="${beamX + beamW - 25}" cy="${tsY}" r="8" fill="#1e293b"/>`;
 
-            const scaleX =
-                160 / Math.max(b, 1);
+            // --- STRAIN DIAGRAM ---
+            const strainX = 260;
+            const maxStrainW = 70;
+            const cY = beamY + (c * scaleY);
 
-            const beamW =
-                b * scaleX;
+            // Neutral axis zero reference line
+            html += `<line x1="${strainX}" y1="${beamY}" x2="${strainX}" y2="${beamY + beamH}" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3"/>`;
+            // Neutral axis level line
+            html += `<line x1="${beamX}" y1="${cY}" x2="${strainX + maxStrainW + 40}" y2="${cY}" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,4"/>`;
+            html += `<text x="${strainX + maxStrainW + 45}" y="${cY + 4}" font-size="10" fill="#ef4444" font-weight="bold">N.A. (c=${c.toFixed(1)}")</text>`;
 
-            const beamH =
-                totalHeight * scaleY;
+            // Strain profile slope line
+            const topStrainW = maxStrainW; // concrete strain = 0.003
+            const botStrainW = (es / 0.003) * maxStrainW;
+            const compSteelStrainW = (eps / 0.003) * maxStrainW;
 
-            const startX = 90;
-            const startY = 40;
+            html += `<line x1="${strainX + topStrainW}" y1="${beamY}" x2="${strainX - botStrainW}" y2="${tsY}" stroke="#2563eb" stroke-width="2.5"/>`;
+            
+            // Fill compression and tension strain triangles
+            html += `<path d="M ${strainX} ${cY} L ${strainX + topStrainW} ${beamY} L ${strainX} ${beamY} Z" fill="rgba(37,99,235,0.1)"/>`;
+            html += `<path d="M ${strainX} ${cY} L ${strainX - botStrainW} ${tsY} L ${strainX} ${tsY} Z" fill="rgba(239,68,68,0.05)"/>`;
 
-            const posDPrime =
-                startY + dPrime * scaleY;
+            // Strain Labels
+            html += `<text x="${strainX + topStrainW + 5}" y="${beamY + 12}" font-size="10" fill="#2563eb">&epsilon;_cu = 0.003</text>`;
+            html += `<text x="${strainX - botStrainW - 5}" y="${tsY + 4}" text-anchor="end" font-size="10" fill="#2563eb">&epsilon;_t = ${es.toFixed(4)}</text>`;
+            html += `<text x="${strainX + Math.max(10, compSteelStrainW + 5)}" y="${csY + 4}" font-size="10" fill="#475569">&epsilon;_s' = ${eps.toFixed(4)}</text>`;
+            html += `<circle cx="${strainX + compSteelStrainW}" cy="${csY}" r="3" fill="#2563eb"/>`;
 
-            const posD =
-                startY + d * scaleY;
+            // --- STRESS / FORCE BLOCK DIAGRAM ---
+            const stressX = 490;
+            const blockW = 60;
+            const aY = beamY + (a * scaleY);
 
-            const posC =
-                startY + c * scaleY;
+            // Concrete Stress Block
+            html += `<rect x="${stressX}" y="${beamY}" width="${blockW}" height="${a * scaleY}" fill="rgba(22,101,52,0.15)" stroke="#166534" stroke-width="1.5"/>`;
+            html += `<text x="${stressX + blockW/2}" y="${beamY + (a*scaleY)/2 + 4}" text-anchor="middle" font-size="10" fill="#166534" font-weight="bold">0.85 f'c</text>`;
+            
+            // Cc Force Vector
+            const ccForceY = beamY + ((a/2) * scaleY);
+            html += `<line x1="${stressX + blockW + 40}" y1="${ccForceY}" x2="${stressX + blockW}" y2="${ccForceY}" stroke="#166534" stroke-width="2.5" marker-end="url(#arrow)"/>`;
+            html += `<text x="${stressX + blockW + 45}" y="${ccForceY + 4}" font-size="11" fill="#166534" font-weight="bold">Cc</text>`;
 
-            const posA =
-                startY + a * scaleY;
+            // Cs Force Vector
+            html += `<line x1="${stressX + blockW + 40}" y1="${csY}" x2="${stressX + 15}" y2="${csY}" stroke="#0f172a" stroke-width="2" marker-end="url(#arrow)"/>`;
+            html += `<text x="${stressX + blockW + 45}" y="${csY + 4}" font-size="11" fill="#0f172a" font-weight="bold">Cs</text>`;
 
-            const tensionBarCount = 4;
-            const compressionBarCount = 2;
+            // Tension Force Vector T
+            html += `<line x1="${stressX - 40}" y1="${tsY}" x2="${stressX}" y2="${tsY}" stroke="#b91c1c" stroke-width="2.5" marker-end="url(#arrow)"/>`;
+            html += `<text x="${stressX - 45}" y="${tsY + 4}" text-anchor="end" font-size="11" fill="#b91c1c" font-weight="bold">T</text>`;
 
-            let tensionBars = "";
-            let compressionBars = "";
+            // SVG Marker Definition for Arrows
+            html += `<defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 1 L 10 5 L 0 9 z" fill="context-stroke" />
+                </marker>
+            </defs>`;
 
-            for (let i = 0; i < tensionBarCount; i++) {
-                const x =
-                    startX +
-                    beamW * ((i + 1) / (tensionBarCount + 1));
-
-                tensionBars += `
-                    <circle
-                        cx="${x}"
-                        cy="${posD}"
-                        r="7"
-                        fill="#dc2626"
-                    />
-                `;
-            }
-
-            for (let i = 0; i < compressionBarCount; i++) {
-                const x =
-                    startX +
-                    beamW * ((i + 1) / (compressionBarCount + 1));
-
-                compressionBars += `
-                    <circle
-                        cx="${x}"
-                        cy="${posDPrime}"
-                        r="6"
-                        fill="#2563eb"
-                    />
-                `;
-            }
-
-            svg.innerHTML = `
-                <rect
-                    x="${startX}"
-                    y="${startY}"
-                    width="${beamW}"
-                    height="${beamH}"
-                    fill="#e2e8f0"
-                    stroke="#475569"
-                    stroke-width="2"
-                />
-
-                <rect
-                    x="${startX}"
-                    y="${startY}"
-                    width="${beamW}"
-                    height="${Math.max(0, posA - startY)}"
-                    fill="#fca5a5"
-                    opacity="0.45"
-                />
-
-                <line
-                    x1="${startX - 20}"
-                    y1="${posC}"
-                    x2="${startX + beamW + 20}"
-                    y2="${posC}"
-                    stroke="#ef4444"
-                    stroke-width="1.5"
-                    stroke-dasharray="4"
-                />
-
-                <text
-                    x="${startX + beamW + 25}"
-                    y="${posC + 4}"
-                    font-size="11"
-                    fill="#ef4444"
-                    font-weight="bold"
-                >
-                    N.A. (c)
-                </text>
-
-                ${compressionBars}
-                ${tensionBars}
-
-                <line
-                    x1="${startX - 15}"
-                    y1="${startY}"
-                    x2="${startX - 15}"
-                    y2="${posDPrime}"
-                    stroke="#64748b"
-                    stroke-width="1"
-                />
-
-                <text
-                    x="${startX - 20}"
-                    y="${(startY + posDPrime) / 2}"
-                    font-size="10"
-                    fill="#64748b"
-                    text-anchor="end"
-                >
-                    d'
-                </text>
-
-                <line
-                    x1="${startX - 40}"
-                    y1="${startY}"
-                    x2="${startX - 40}"
-                    y2="${posD}"
-                    stroke="#64748b"
-                    stroke-width="1"
-                />
-
-                <text
-                    x="${startX - 45}"
-                    y="${(startY + posD) / 2}"
-                    font-size="10"
-                    fill="#64748b"
-                    text-anchor="end"
-                >
-                    d
-                </text>
-
-                <text
-                    x="${startX + beamW / 2}"
-                    y="${startY - 12}"
-                    font-size="10"
-                    fill="#64748b"
-                    text-anchor="middle"
-                >
-                    Compression
-                </text>
-
-                <text
-                    x="${startX + beamW / 2}"
-                    y="${startY + beamH + 18}"
-                    font-size="10"
-                    fill="#64748b"
-                    text-anchor="middle"
-                >
-                    Tension
-                </text>
-            `;
+            html += `</svg>`;
+            document.getElementById('diagram_svg').innerHTML = html;
         }
 
-        window.addEventListener("load", calculate);
+        // Run initial calculation on page load
+        window.onload = calculate;
     </script>
 </body>
 </html>
