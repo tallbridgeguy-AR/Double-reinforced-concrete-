@@ -462,12 +462,12 @@
             renderDiagram(b, h, d, d_prime, c, a, es, eps);
         }
 
-        function renderDiagram(b, h, d, d_prime, c, a, es, eps) {
-    const width = 800;
-    const height = 320;
+      function renderDiagram(b, h, d, d_prime, c, a, es, eps) {
+    const width = 850;
+    const height = 330;
     
-    // Scale & Position Coordinates
-    const beamX = 50, beamY = 40, beamW = 100, beamH = 220;
+    // Scale & Position Coordinates (Shifted beam rightward to give 75px left margin for "h =" label)
+    const beamX = 75, beamY = 40, beamW = 100, beamH = 220;
     const scaleY = beamH / h;
 
     let html = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`;
@@ -475,9 +475,9 @@
     // --- 1. CROSS SECTION ---
     html += `<rect x="${beamX}" y="${beamY}" width="${beamW}" height="${beamH}" fill="#f1f5f9" stroke="#475569" stroke-width="2"/>`;
     
-    // Dimensions
+    // Dimensions (Generous margin ensures "h = " label never clips)
     html += `<text x="${beamX + beamW/2}" y="${beamY - 12}" text-anchor="middle" font-size="12" font-weight="bold" fill="#334155">b = ${b}"</text>`;
-    html += `<text x="${beamX - 12}" y="${beamY + beamH/2}" text-anchor="end" font-size="12" font-weight="bold" fill="#334155">h = ${h}"</text>`;
+    html += `<text x="${beamX - 15}" y="${beamY + beamH/2}" text-anchor="end" font-size="12" font-weight="bold" fill="#334155">h = ${h}"</text>`;
 
     // Compression Rebar (Top)
     const csY = beamY + (d_prime * scaleY);
@@ -491,19 +491,19 @@
     html += `<circle cx="${beamX + beamW - 20}" cy="${tsY}" r="7" fill="#1e293b"/>`;
 
     // --- 2. STRAIN DIAGRAM ---
-    // Shifted strainX further right (to 340) to give clearance from beam section
-    const strainX = 340; 
+    // Moved datum further right to guarantee complete visual gap from section
+    const strainX = 400; 
     const maxStrainW = 75;
     const cY = beamY + (c * scaleY);
 
-    // Neutral Axis & Datum
+    // Neutral Axis & Datum Reference Lines
     html += `<line x1="${strainX}" y1="${beamY - 10}" x2="${strainX}" y2="${beamY + beamH + 10}" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,4"/>`;
     html += `<line x1="${beamX}" y1="${cY}" x2="${strainX + maxStrainW + 80}" y2="${cY}" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,4"/>`;
     html += `<text x="${strainX + maxStrainW + 10}" y="${cY - 6}" font-size="11" fill="#ef4444" font-weight="bold">N.A. (c = ${c.toFixed(2)}")</text>`;
 
-    // Strain Profile Calculations
+    // Profile Line Calculations
     const topStrainW = maxStrainW; 
-    const botStrainW = (es / 0.003) * maxStrainW;
+    const botStrainW = Math.min((es / 0.003) * maxStrainW, 140); // Capped to stay in bounds
     const compSteelStrainW = (eps / 0.003) * maxStrainW;
 
     // Profile Line
@@ -513,40 +513,40 @@
     html += `<path d="M ${strainX} ${cY} L ${strainX + topStrainW} ${beamY} L ${strainX} ${beamY} Z" fill="rgba(37,99,235,0.12)"/>`;
     html += `<path d="M ${strainX} ${cY} L ${strainX - botStrainW} ${tsY} L ${strainX} ${tsY} Z" fill="rgba(239,68,68,0.10)"/>`;
 
-    // Strain Labels (Cleanly positioned clear of cross-section)
+    // Concrete Top Strain Label
     html += `<text x="${strainX + topStrainW + 8}" y="${beamY + 12}" font-size="11" font-weight="bold" fill="#2563eb">&epsilon;_cu = 0.003</text>`;
-    html += `<text x="${strainX - botStrainW - 8}" y="${tsY + 4}" text-anchor="end" font-size="11" font-weight="bold" fill="#2563eb">&epsilon;_t = ${es.toFixed(4)}</text>`;
     
+    // Bottom Tension Strain Label (Positioned directly below tension tip for guaranteed clearance)
+    html += `<circle cx="${strainX - botStrainW}" cy="${tsY}" r="4" fill="#2563eb"/>`;
+    html += `<text x="${strainX - botStrainW}" y="${tsY + 18}" text-anchor="middle" font-size="11" font-weight="bold" fill="#2563eb">&epsilon;_t = ${es.toFixed(4)}</text>`;
+    
+    // Compression Steel Strain Label
     if (eps > 0) {
         html += `<circle cx="${strainX + compSteelStrainW}" cy="${csY}" r="4" fill="#2563eb"/>`;
         html += `<text x="${strainX + compSteelStrainW + 8}" y="${csY + 4}" font-size="11" font-weight="bold" fill="#475569">&epsilon;_s' = ${eps.toFixed(4)}</text>`;
     }
 
     // --- 3. STRESS & FORCE DIAGRAM ---
-    const stressX = 580;
-    const blockW = 90; // Widened rectangle to prevent text overlap
+    const stressX = 620;
+    const blockW = 90;
     const aY = beamY + (a * scaleY);
 
     // Concrete Stress Block
     html += `<rect x="${stressX}" y="${beamY}" width="${blockW}" height="${a * scaleY}" fill="rgba(22,101,52,0.12)" stroke="#166534" stroke-width="2"/>`;
     html += `<text x="${stressX + blockW/2}" y="${beamY + (a * scaleY)/2 + 4}" text-anchor="middle" font-size="11" fill="#166534" font-weight="bold">0.85 f'c</text>`;
     
-    // Concrete Depth 'a' Indicator
-    html += `<line x1="${stressX}" y1="${aY}" x2="${stressX + blockW}" y2="${aY}" stroke="#166534" stroke-width="1" stroke-dasharray="2,2"/>`;
-
     // Force Vectors & Staggered Label Heights
     const ccForceY = beamY + ((a / 2) * scaleY);
     
     let csLabelY = csY + 4;
     let ccLabelY = ccForceY + 4;
     
-    // Prevent vertically adjacent labels from colliding
     if (Math.abs(csY - ccForceY) < 18) {
         csLabelY = csY - 8;
         ccLabelY = ccForceY + 14;
     }
 
-    // Cc Force Arrow (Pointers stop cleanly at the right edge of the block)
+    // Cc Force Arrow
     html += `<line x1="${stressX + blockW + 50}" y1="${ccForceY}" x2="${stressX + blockW + 2}" y2="${ccForceY}" stroke="#166534" stroke-width="2.5" marker-end="url(#arrow-green)"/>`;
     html += `<text x="${stressX + blockW + 56}" y="${ccLabelY}" font-size="12" fill="#166534" font-weight="bold">Cc</text>`;
 
@@ -558,7 +558,7 @@
     html += `<line x1="${stressX - 50}" y1="${tsY}" x2="${stressX - 2}" y2="${tsY}" stroke="#b91c1c" stroke-width="2.5" marker-end="url(#arrow-red)"/>`;
     html += `<text x="${stressX - 56}" y="${tsY + 4}" text-anchor="end" font-size="12" fill="#b91c1c" font-weight="bold">T</text>`;
 
-    // Custom Colored Markers
+    // Markers Definition
     html += `<defs>
         <marker id="arrow-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
             <path d="M 0 1 L 10 5 L 0 9 z" fill="#166534" />
