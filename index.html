@@ -463,101 +463,117 @@
         }
 
         function renderDiagram(b, h, d, d_prime, c, a, es, eps) {
-            const width = 720;
-            const height = 300;
-            
-            // Layout scale coordinates
-            const beamX = 40, beamY = 40, beamW = 100, beamH = 210;
-            const scaleY = beamH / h;
+    const width = 800;
+    const height = 320;
+    
+    // Scale & Position Coordinates
+    const beamX = 50, beamY = 40, beamW = 100, beamH = 220;
+    const scaleY = beamH / h;
 
-            let html = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`;
-            
-            // --- CROSS SECTION ---
-            html += `<rect x="${beamX}" y="${beamY}" width="${beamW}" height="${beamH}" fill="#e2e8f0" stroke="#475569" stroke-width="2"/>`;
-            
-            // Dimension Lines & Labels
-            html += `<text x="${beamX + beamW/2}" y="${beamY - 12}" text-anchor="middle" font-size="11" font-weight="bold" fill="#334155">b = ${b}"</text>`;
-            html += `<text x="${beamX - 12}" y="${beamY + beamH/2}" text-anchor="end" font-size="11" font-weight="bold" fill="#334155">h = ${h}"</text>`;
+    let html = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`;
+    
+    // --- 1. CROSS SECTION ---
+    html += `<rect x="${beamX}" y="${beamY}" width="${beamW}" height="${beamH}" fill="#f1f5f9" stroke="#475569" stroke-width="2"/>`;
+    
+    // Dimensions
+    html += `<text x="${beamX + beamW/2}" y="${beamY - 12}" text-anchor="middle" font-size="12" font-weight="bold" fill="#334155">b = ${b}"</text>`;
+    html += `<text x="${beamX - 12}" y="${beamY + beamH/2}" text-anchor="end" font-size="12" font-weight="bold" fill="#334155">h = ${h}"</text>`;
 
-            // Rebar circles
-            const csY = beamY + (d_prime * scaleY);
-            html += `<circle cx="${beamX + 25}" cy="${csY}" r="6" fill="#1e293b"/>`;
-            html += `<circle cx="${beamX + beamW - 25}" cy="${csY}" r="6" fill="#1e293b"/>`;
+    // Compression Rebar (Top)
+    const csY = beamY + (d_prime * scaleY);
+    html += `<circle cx="${beamX + 25}" cy="${csY}" r="6" fill="#1e293b"/>`;
+    html += `<circle cx="${beamX + beamW - 25}" cy="${csY}" r="6" fill="#1e293b"/>`;
 
-            const tsY = beamY + (d * scaleY);
-            html += `<circle cx="${beamX + 20}" cy="${tsY}" r="7" fill="#1e293b"/>`;
-            html += `<circle cx="${beamX + beamW/2}" cy="${tsY}" r="7" fill="#1e293b"/>`;
-            html += `<circle cx="${beamX + beamW - 20}" cy="${tsY}" r="7" fill="#1e293b"/>`;
+    // Tension Rebar (Bottom)
+    const tsY = beamY + (d * scaleY);
+    html += `<circle cx="${beamX + 20}" cy="${tsY}" r="7" fill="#1e293b"/>`;
+    html += `<circle cx="${beamX + beamW/2}" cy="${tsY}" r="7" fill="#1e293b"/>`;
+    html += `<circle cx="${beamX + beamW - 20}" cy="${tsY}" r="7" fill="#1e293b"/>`;
 
-            // --- STRAIN DIAGRAM ---
-            const strainX = 290;
-            const maxStrainW = 65;
-            const cY = beamY + (c * scaleY);
+    // --- 2. STRAIN DIAGRAM ---
+    // Shifted strainX further right (to 340) to give clearance from beam section
+    const strainX = 340; 
+    const maxStrainW = 75;
+    const cY = beamY + (c * scaleY);
 
-            // Reference Axes
-            html += `<line x1="${strainX}" y1="${beamY}" x2="${strainX}" y2="${beamY + beamH}" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3"/>`;
-            html += `<line x1="${beamX}" y1="${cY}" x2="${strainX + maxStrainW + 65}" y2="${cY}" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,4"/>`;
-            html += `<text x="${strainX + maxStrainW + 10}" y="${cY - 5}" font-size="10" fill="#ef4444" font-weight="bold">N.A. (c=${c.toFixed(2)}")</text>`;
+    // Neutral Axis & Datum
+    html += `<line x1="${strainX}" y1="${beamY - 10}" x2="${strainX}" y2="${beamY + beamH + 10}" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,4"/>`;
+    html += `<line x1="${beamX}" y1="${cY}" x2="${strainX + maxStrainW + 80}" y2="${cY}" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,4"/>`;
+    html += `<text x="${strainX + maxStrainW + 10}" y="${cY - 6}" font-size="11" fill="#ef4444" font-weight="bold">N.A. (c = ${c.toFixed(2)}")</text>`;
 
-            // Profile Slope Line
-            const topStrainW = maxStrainW; 
-            const botStrainW = (es / 0.003) * maxStrainW;
-            const compSteelStrainW = (eps / 0.003) * maxStrainW;
+    // Strain Profile Calculations
+    const topStrainW = maxStrainW; 
+    const botStrainW = (es / 0.003) * maxStrainW;
+    const compSteelStrainW = (eps / 0.003) * maxStrainW;
 
-            html += `<line x1="${strainX + topStrainW}" y1="${beamY}" x2="${strainX - botStrainW}" y2="${tsY}" stroke="#2563eb" stroke-width="2.5"/>`;
-            
-            // Strain Triangles
-            html += `<path d="M ${strainX} ${cY} L ${strainX + topStrainW} ${beamY} L ${strainX} ${beamY} Z" fill="rgba(37,99,235,0.1)"/>`;
-            html += `<path d="M ${strainX} ${cY} L ${strainX - botStrainW} ${tsY} L ${strainX} ${tsY} Z" fill="rgba(239,68,68,0.08)"/>`;
+    // Profile Line
+    html += `<line x1="${strainX + topStrainW}" y1="${beamY}" x2="${strainX - botStrainW}" y2="${tsY}" stroke="#2563eb" stroke-width="2.5"/>`;
+    
+    // Shaded Triangles
+    html += `<path d="M ${strainX} ${cY} L ${strainX + topStrainW} ${beamY} L ${strainX} ${beamY} Z" fill="rgba(37,99,235,0.12)"/>`;
+    html += `<path d="M ${strainX} ${cY} L ${strainX - botStrainW} ${tsY} L ${strainX} ${tsY} Z" fill="rgba(239,68,68,0.10)"/>`;
 
-            // Strain Labels
-            html += `<text x="${strainX + topStrainW + 6}" y="${beamY + 12}" font-size="10" font-weight="bold" fill="#2563eb">&epsilon;_cu = 0.003</text>`;
-            html += `<text x="${strainX - botStrainW - 6}" y="${tsY + 4}" text-anchor="end" font-size="10" font-weight="bold" fill="#2563eb">&epsilon;_t = ${es.toFixed(4)}</text>`;
-            html += `<text x="${strainX + compSteelStrainW + 8}" y="${csY + 4}" font-size="10" font-weight="bold" fill="#475569">&epsilon;_s' = ${eps.toFixed(4)}</text>`;
-            html += `<circle cx="${strainX + compSteelStrainW}" cy="${csY}" r="3.5" fill="#2563eb"/>`;
+    // Strain Labels (Cleanly positioned clear of cross-section)
+    html += `<text x="${strainX + topStrainW + 8}" y="${beamY + 12}" font-size="11" font-weight="bold" fill="#2563eb">&epsilon;_cu = 0.003</text>`;
+    html += `<text x="${strainX - botStrainW - 8}" y="${tsY + 4}" text-anchor="end" font-size="11" font-weight="bold" fill="#2563eb">&epsilon;_t = ${es.toFixed(4)}</text>`;
+    
+    if (eps > 0) {
+        html += `<circle cx="${strainX + compSteelStrainW}" cy="${csY}" r="4" fill="#2563eb"/>`;
+        html += `<text x="${strainX + compSteelStrainW + 8}" y="${csY + 4}" font-size="11" font-weight="bold" fill="#475569">&epsilon;_s' = ${eps.toFixed(4)}</text>`;
+    }
 
-            // --- STRESS / FORCE BLOCK DIAGRAM ---
-            const stressX = 540;
-            const blockW = 55;
-            const aY = beamY + (a * scaleY);
+    // --- 3. STRESS & FORCE DIAGRAM ---
+    const stressX = 580;
+    const blockW = 90; // Widened rectangle to prevent text overlap
+    const aY = beamY + (a * scaleY);
 
-            // Concrete Stress Block
-            html += `<rect x="${stressX}" y="${beamY}" width="${blockW}" height="${a * scaleY}" fill="rgba(22,101,52,0.15)" stroke="#166534" stroke-width="1.5"/>`;
-            html += `<text x="${stressX + blockW/2}" y="${beamY + (a*scaleY)/2 + 4}" text-anchor="middle" font-size="10" fill="#166534" font-weight="bold">0.85 f'c</text>`;
-            
-            // Force Vectors
-            const ccForceY = beamY + ((a/2) * scaleY);
-            
-            // Separate overlapping Cc and Cs force labels if needed
-            let csLabelY = csY + 4;
-            let ccLabelY = ccForceY + 4;
-            if (Math.abs(csY - ccForceY) < 14) {
-                csLabelY = csY - 6;
-                ccLabelY = ccForceY + 12;
-            }
+    // Concrete Stress Block
+    html += `<rect x="${stressX}" y="${beamY}" width="${blockW}" height="${a * scaleY}" fill="rgba(22,101,52,0.12)" stroke="#166534" stroke-width="2"/>`;
+    html += `<text x="${stressX + blockW/2}" y="${beamY + (a * scaleY)/2 + 4}" text-anchor="middle" font-size="11" fill="#166534" font-weight="bold">0.85 f'c</text>`;
+    
+    // Concrete Depth 'a' Indicator
+    html += `<line x1="${stressX}" y1="${aY}" x2="${stressX + blockW}" y2="${aY}" stroke="#166534" stroke-width="1" stroke-dasharray="2,2"/>`;
 
-            // Cc Vector
-            html += `<line x1="${stressX + blockW + 35}" y1="${ccForceY}" x2="${stressX + blockW}" y2="${ccForceY}" stroke="#166534" stroke-width="2.5" marker-end="url(#arrow)"/>`;
-            html += `<text x="${stressX + blockW + 40}" y="${ccLabelY}" font-size="11" fill="#166534" font-weight="bold">Cc</text>`;
+    // Force Vectors & Staggered Label Heights
+    const ccForceY = beamY + ((a / 2) * scaleY);
+    
+    let csLabelY = csY + 4;
+    let ccLabelY = ccForceY + 4;
+    
+    // Prevent vertically adjacent labels from colliding
+    if (Math.abs(csY - ccForceY) < 18) {
+        csLabelY = csY - 8;
+        ccLabelY = ccForceY + 14;
+    }
 
-            // Cs Vector
-            html += `<line x1="${stressX + blockW + 35}" y1="${csY}" x2="${stressX + 15}" y2="${csY}" stroke="#0f172a" stroke-width="2" marker-end="url(#arrow)"/>`;
-            html += `<text x="${stressX + blockW + 40}" y="${csLabelY}" font-size="11" fill="#0f172a" font-weight="bold">Cs</text>`;
+    // Cc Force Arrow (Pointers stop cleanly at the right edge of the block)
+    html += `<line x1="${stressX + blockW + 50}" y1="${ccForceY}" x2="${stressX + blockW + 2}" y2="${ccForceY}" stroke="#166534" stroke-width="2.5" marker-end="url(#arrow-green)"/>`;
+    html += `<text x="${stressX + blockW + 56}" y="${ccLabelY}" font-size="12" fill="#166534" font-weight="bold">Cc</text>`;
 
-            // Tension Force Vector T
-            html += `<line x1="${stressX - 35}" y1="${tsY}" x2="${stressX}" y2="${tsY}" stroke="#b91c1c" stroke-width="2.5" marker-end="url(#arrow)"/>`;
-            html += `<text x="${stressX - 40}" y="${tsY + 4}" text-anchor="end" font-size="11" fill="#b91c1c" font-weight="bold">T</text>`;
+    // Cs Force Arrow
+    html += `<line x1="${stressX + blockW + 50}" y1="${csY}" x2="${stressX + blockW + 2}" y2="${csY}" stroke="#0f172a" stroke-width="2" marker-end="url(#arrow-black)"/>`;
+    html += `<text x="${stressX + blockW + 56}" y="${csLabelY}" font-size="12" fill="#0f172a" font-weight="bold">Cs</text>`;
 
-            // SVG Arrow Defs
-            html += `<defs>
-                <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                    <path d="M 0 1 L 10 5 L 0 9 z" fill="context-stroke" />
-                </marker>
-            </defs>`;
+    // Tension Force Arrow (T)
+    html += `<line x1="${stressX - 50}" y1="${tsY}" x2="${stressX - 2}" y2="${tsY}" stroke="#b91c1c" stroke-width="2.5" marker-end="url(#arrow-red)"/>`;
+    html += `<text x="${stressX - 56}" y="${tsY + 4}" text-anchor="end" font-size="12" fill="#b91c1c" font-weight="bold">T</text>`;
 
-            html += `</svg>`;
-            document.getElementById('diagram_svg').innerHTML = html;
-        }
+    // Custom Colored Markers
+    html += `<defs>
+        <marker id="arrow-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 10 5 L 0 9 z" fill="#166534" />
+        </marker>
+        <marker id="arrow-black" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 10 5 L 0 9 z" fill="#0f172a" />
+        </marker>
+        <marker id="arrow-red" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 10 5 L 0 9 z" fill="#b91c1c" />
+        </marker>
+    </defs>`;
+
+    html += `</svg>`;
+    document.getElementById('diagram_svg').innerHTML = html;
+}
 
         // Run initial calculation on page load
         window.onload = calculate;
